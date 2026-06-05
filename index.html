@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nandan Kamath | Computer Engineering Portfolio</title>
+    <style>
+        :root {
+            --primary: #00274C; /* University of Michigan Blue */
+            --secondary: #FFCB05; /* University of Michigan Maize */
+            --bg: #f8f9fa;
+            --text: #333;
+            --card-bg: #ffffff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-bottom: 5px solid var(--secondary);
+        }
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        .contact-links a {
+            color: var(--secondary);
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        .contact-links a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 0.5rem;
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+        .card h3 {
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        .card .meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        .card ul {
+            margin-left: 1.5rem;
+        }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .skill-box {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .skill-box h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: var(--primary);
+            color: white;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Nandan Kamath</h1>
+        <p>BSE Computer Engineering | University of Michigan</p>
+        <div class="contact-links">
+            <a href="mailto:nandank@umich.edu">nandank@umich.edu</a>
+            <a href="https://www.linkedin.com/in/nandan-kamath" target="_blank">LinkedIn</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <section>
+            <h2>Technical Projects</h2>
+
+            <div class="card">
+                <h3>R10K Style Out-of-Order Processor</h3>
+                <div class="meta">August 2025 - December 2025 | SystemVerilog</div>
+                <ul>
+                    <li>Implemented an N-way superscalar, out-of-order CPU inspired by the MIPS R10K microarchitecture operating at 83.33 MHz.</li>
+                    <li>Designed dynamic scheduling, physical register renaming, speculative execution, and in-order retirement.</li>
+                    <li>Created a centralized Reorder Buffer, Reservation Station, and pipelined variable-latency functional units with full branch misprediction recovery.</li>
+                    <li>Optimized memory access via a non-blocking instruction cache with stream buffer prefetching and a 4-way set-associative write-back data cache with MSHRs.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>VLSI Design & Optimization of a 16-Bit RISC Processor</h3>
+                <div class="meta">January 2026 - April 2026 | Cadence Virtuoso, NC-Verilog</div>
+                <ul>
+                    <li>Engineered the physical layout of a 16-bit RISC processor, designing transistor-level schematics passing DRC/LVS requirements.</li>
+                    <li>Optimized ALU critical path performance by implementing a 16-bit Kogge-Stone parallel prefix adder, achieving a 23% reduction in delay and a 32% reduction in silicon area.</li>
+                    <li>Validated system functionality using mixed-signal verification to ensure logic equivalence between behavioral models and extracted Cadence netlists.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Hardware Acceleration for Real-time Semantic Graph SLAM</h3>
+                <div class="meta">February 2026 - April 2026 | AMD AIE, Matrix Optimization</div>
+                <ul>
+                    <li>Developed custom acceleration kernels using the AMD AIE library to map matrix multiplications to an AMD Versal chip, utilizing FP32 to INT8 quantization.</li>
+                    <li>Accelerated compute-intensive convolutional layers of the RangeNet++ architecture to enable real-time semantic segmentation of 3D LIDAR point clouds.</li>
+                    <li>Benchmarked against an AWS EC2 instance (NVIDIA A10 GPU), achieving an estimated 82% reduction in execution latency and a 90% improvement in power efficiency.</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Design and Verification of a Cache Coherence Protocol</h3>
+                <div class="meta">Murphi Verification System</div>
+                <ul>
+                    <li>Designed and implemented a multi-core cache coherence protocol (e.g., MESI/MOESI) to ensure memory consistency across parallel processors.</li>
+                    <li>Utilized the Murphi verification tool to model state transitions, identifying and resolving potential deadlocks and race conditions in corner cases.</li>
+                    <li>[Add one more sentence here detailing a specific bug you found or performance metric you improved during verification!]</li>
+                </ul>
+            </div>
+
+        </section>
+
+        <section>
+            <h2>Technical Skills</h2>
+            <div class="skills-grid">
+                <div class="skill-box">
+                    <h4>Programming Languages</h4>
+                    <p>C/C++, SystemVerilog, Python, TCL, Linux, SQL</p>
+                </div>
+                <div class="skill-box">
+                    <h4>Engineering Tools</h4>
+                    <p>Synopsys (Verdi, Design Compiler), Cadence (Virtuoso, JasperGold, Innovus), ModelSim, HSPICE</p>
+                </div>
+                <div class="skill-box">
+                    <h4>Architecture & VLSI</h4>
+                    <p>CPU & GPU Architecture, Processor Pipelines, Memory Hierarchy, Cache Coherency, PPA Optimization, DRC/LVS, ARM/RISC-V ISA, RTL</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Nandan Kamath. Designed for GitHub Pages.</p>
+    </footer>
+
+</body>
+</html>
