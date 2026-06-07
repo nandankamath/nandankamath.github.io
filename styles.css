@@ -124,34 +124,34 @@ footer {
 
 
 /* =========================================
-   PROJECT DETAILS PAGE STYLING
+   PROJECT DETAILS PAGE STYLING (COMPACT)
    ========================================= */
 
-/* Center the entire page and restrict the width for readability */
+/* Center the entire page content */
 .project-details {
     max-width: 850px;
     margin: 0 auto;
-    padding: 20px 20px;
+    padding: 40px 20px;
 }
 
-/* Center the main title */
+/* Main Page Title */
 .project-details h1 {
     text-align: center;
     font-size: 2.5rem;
-    margin-bottom: 5px; /* Super tight against the subtitle */
+    margin-bottom: 8px;
 }
 
-/* 1-Line Project Subtitle */
+/* 1-Line Subtitle under H1 */
 .project-subtitle {
     text-align: center;
     color: #888888;
     font-size: 0.95rem;
     font-weight: 500;
-    margin-bottom: 25px; /* Keeps it tight to the paragraph */
+    margin-bottom: 30px;
     letter-spacing: 0.5px;
 }
 
-/* Center the lead text */
+/* Lead intro text paragraph */
 .project-details .lead-text {
     text-align: center;
     font-size: 1.15rem;
@@ -160,10 +160,10 @@ footer {
     margin-bottom: 20px;
 }
 
-/* Center the diagram and caption */
+/* Diagram layout wrapper */
 .diagram-container {
     text-align: center;
-    margin: 20px 0;
+    margin: 20px 0 35px 0;
 }
 
 .diagram-container img {
@@ -176,38 +176,39 @@ footer {
     color: #888888;
 }
 
-/* Fix the spacing for sections and headers */
+/* Top-level section headings (e.g., Memory Interface) */
 .project-details h2 {
     font-size: 1.8rem;
-    margin-top: 30px; /* Reduced from 50px to kill the giant gap */
-    margin-bottom: 15px;
-    border-bottom: 1px solid #333333; 
+    margin-top: 40px; /* Space above a brand new major section */
+    margin-bottom: 15px; /* Minimal space before sub-content begins */
+    border-bottom: 1px solid #222222; 
     padding-bottom: 8px;
 }
 
+/* Inner subheadings (e.g., Non-Blocking Instruction Cache) */
 .project-details h3 {
-    font-size: 1.3rem;
-    margin-top: 25px; /* Reduced from 35px to tighten section flow */
-    margin-bottom: 8px;
+    font-size: 1.25rem;
+    margin-top: 18px; /* Tighter gap separating it from the preceding text block */
+    margin-bottom: 4px; /* Tiny forced gap between this heading and its description text */
     color: #e0e0e0;
 }
 
-/* Fix paragraphs for optimal reading */
+/* Descriptive paragraph blocks */
 .project-details p {
-    line-height: 1.7;
-    margin-bottom: 15px; /* Slightly tighter text blocks */
+    line-height: 1.65;
+    margin-bottom: 12px; /* Clamps down on the space between consecutive paragraphs */
     font-size: 1.05rem;
 }
 
-/* Fix the bullet points */
+/* Bullet list wrappers */
 .project-details ul {
     list-style-type: disc;
-    margin-left: 40px; 
-    margin-bottom: 25px;
+    margin-left: 25px; 
+    margin-bottom: 15px;
 }
 
 .project-details li {
-    line-height: 1.7;
-    margin-bottom: 8px; 
+    line-height: 1.65;
+    margin-bottom: 6px; 
     font-size: 1.05rem;
 }
