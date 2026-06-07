@@ -1,57 +1,99 @@
-<div class="project-details">
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R10K Processor | Nandan Kamath</title>
     
-    <h2>R10K Style Out-of-Order Processor</h2>
+    <link rel="stylesheet" href="../styles.css">
     
-    <section class="project-overview">
-        <h3>Design Overview</h3>
-        <p>
-            Our team implemented the R10000 architecture, selecting it to reduce implementation risks due to a strong grasp of its structural logic[cite: 3, 4]. We engineered an N-way scaled out-of-order processor featuring advanced GShare branch prediction, prefetching with an unblocked instruction cache, and an associative data cache[cite: 5].
-        </p>
-    </section>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
 
-    <section class="project-specs">
-        <h3>Component Specifications</h3>
-        <ul>
-            <li><strong>Reservation Station (RS):</strong> 8 entries[cite: 66].</li>
-            <li><strong>Reorder Buffer (ROB):</strong> 15 entries[cite: 67].</li>
-            <li><strong>Physical Registers (PR):</strong> 64 registers[cite: 68].</li>
-            <li><strong>Functional Units:</strong> 2 ALU, 2 Load, 2 Stores, 2 Mult[cite: 68].</li>
-            <li><strong>Instruction Cache:</strong> 256 bytes[cite: 74].</li>
-            <li><strong>Prefetcher:</strong> Looks 3 lines ahead[cite: 75].</li>
-            <li><strong>Store Queue (SQ):</strong> 8 entries[cite: 75].</li>
-            <li><strong>Data Cache:</strong> 256 bytes[cite: 76].</li>
-            <li><strong>PHT / BTB:</strong> 16 entries each[cite: 76].</li>
-        </ul>
-    </section>
+<body>
 
-    <section class="project-pipeline">
-        <h3>Pipeline Architecture</h3>
-        <ul>
-            <li><strong>Fetch Stage:</strong> Retrieves up to two instructions per cycle[cite: 80]. It requests 64-bit aligned blocks from the ICache using dynamic alignment logic [cite: 84] and monitors the Instruction Queue to gracefully transition to a stall state upon detecting backpressure[cite: 86].</li>
-            <li><strong>Instruction Queue:</strong> A 2N-depth circular FIFO buffer [cite: 89] supporting simultaneous read/writes[cite: 90]. It uses a lookahead mechanism to pre-calculate dispatchable packets[cite: 91].</li>
-            <li><strong>Dispatch Stage:</strong> Parallelizes decoding, register renaming, and resource arbitration[cite: 95]. Maps destination registers to physical tags from the Free List [cite: 98] and assigns Store Queue indices[cite: 99, 100].</li>
-            <li><strong>Reservation Station:</strong> Enables out-of-order issues by holding decoded instructions until dependencies are met[cite: 102]. Accepts up to N new instructions [cite: 103] and uses a parallel ready-mask against CDB broadcasts for instant wakeup[cite: 104].</li>
-            <li><strong>Reorder Buffer (ROB):</strong> Maintains precise state with a circular buffer supporting superscalar advancement[cite: 110]. Ensures in-order retirement [cite: 113] and acts as the central recovery unit during branch mispredictions[cite: 114].</li>
-            <li><strong>Free List & Map Table:</strong> The Free List exposes a vector of N candidate registers [cite: 119], while the Map Table handles dynamic architectural-to-physical mapping [cite: 126] and instantly restores state from the committed architectural map during a flush[cite: 129].</li>
-        </ul>
-    </section>
+    <nav>
+        <div class="logo">NK</div>
+        <div class="nav-links">
+            <a href="../index.html">← Back to Home</a>
+        </div>
+    </nav>
 
-    <section class="project-memory">
-        <h3>Memory Interface</h3>
-        <ul>
-            <li><strong>Non-Blocking Instruction Cache:</strong> Utilizes dual memory ports [cite: 132] to stream 4 instructions simultaneously, enabling a 3-instruction lookahead[cite: 133].</li>
-            <li><strong>Data Cache:</strong> A 4-way set-associative, write-allocate, write-back design [cite: 137] managed through a controller FSM and a single-entry MSHR[cite: 138].</li>
-            <li><strong>Memory Controller:</strong> Manages backpressure by strictly prioritizing store commits over load requests[cite: 143].</li>
-        </ul>
-    </section>
+    <main class="project-details">
+        
+        <h1>R10K Style Out-of-Order Processor</h1>
+        
+        <section class="project-overview">
+            <p class="lead-text">
+                An N-way scaled out-of-order processor based on the R10000 architecture, featuring GShare branch prediction, stream buffer prefetching, and an associative data cache.
+            </p>
+            
+            <div class="diagram-container">
+                <img src="r10k-walkthrough.png" alt="R10K Processor Block Diagram" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 20px 0;">
+                <p class="caption"><em>Top-level block diagram of the N-way superscalar pipeline.</em></p>
+            </div>
+        </section>
 
-    <section class="project-features">
-        <h3>Advanced Features & Performance</h3>
-        <ul>
-            <li><strong>N-way Scalar Execution:</strong> Fully parameterized pipeline processing up to N instructions per cycle [cite: 149], supported by N-ported backend structures[cite: 152]. Optimal performance was achieved at N=3 or N=4[cite: 374].</li>
-            <li><strong>Stream Buffer Prefetching:</strong> A non-blocking prefetcher scans a four-line lookahead window[cite: 154, 155]. This single addition yielded a ~1.8x speedup on core benchmarks (improving CPI from 9 to 5)[cite: 357].</li>
-            <li><strong>GShare Branch Predictor:</strong> Integrates a 4-bit branch history register [cite: 159], utilizing an XOR hash of the PC and history to index the Pattern History Table [cite: 163], alongside a tagged Branch Target Buffer to prevent aliasing[cite: 164].</li>
-        </ul>
-    </section>
+        <section class="project-specs">
+            <h2>Architecture at a Glance</h2>
+            <ul class="spec-grid">
+                <li><strong>Fetch/Dispatch:</strong> Up to N instructions/cycle</li>
+                <li><strong>Reservation Station:</strong> 8 entries</li>
+                <li><strong>Reorder Buffer (ROB):</strong> 15 entries</li>
+                <li><strong>Physical Registers:</strong> 64 registers</li>
+                <li><strong>Caches:</strong> 256B I-Cache (Non-blocking) | 256B D-Cache (4-way associative)</li>
+            </ul>
+        </section>
 
-</div>
+        <section class="project-walkthrough">
+            <h2>Pipeline Walkthrough</h2>
+            <p>Following the data path illustrated above, the processor manages out-of-order execution through the following highly-parameterized stages:</p>
+
+            <h3>1. Front-End: Fetch & Predict</h3>
+            <p>
+                The pipeline begins with a dual-port, non-blocking Instruction Cache that streams up to 4 instructions simultaneously. A stream buffer prefetcher looks 3 lines ahead, which alone yielded a <strong>~1.8x speedup</strong> on core benchmarks.
+                <br><br>
+                <em></em>
+            </p>
+
+            <h3>2. Dispatch & Renaming</h3>
+            <p>
+                To support N-way execution, the Dispatch stage parallelizes decoding and resource arbitration. The Map Table handles dynamic architectural-to-physical mapping, pulling from a Free List that exposes a vector of N candidate registers. If the ROB, Store Queue, or Free List hits capacity, the instruction queue gracefully stalls.
+            </p>
+
+            <h3>3. Out-of-Order Execution</h3>
+            <p>
+                Instructions are held in the 8-entry Reservation Station until dependencies are cleared. A parallel ready-mask constantly snoops the Common Data Bus (CDB) broadcasts for instant wakeup. Once ready, instructions fire into one of the available functional units (2 ALU, 2 Load, 2 Store, 2 Mult).
+                <br><br>
+                <em></em>
+            </p>
+
+            <h3>4. Memory Subsystem</h3>
+            <p>
+                The Data Cache is a 4-way set-associative, write-allocate, write-back design. To manage complex memory dependencies and prevent pipeline lockups, a dedicated Memory Controller strictly prioritizes store commits over load requests, utilizing a single-entry MSHR.
+            </p>
+
+            <h3>5. In-Order Retirement</h3>
+            <p>
+                The 15-entry Reorder Buffer (ROB) is the heart of the processor's precise state. Operating as a circular buffer, it supports superscalar advancement and acts as the central recovery unit. On a branch misprediction, the ROB flushes speculative states and instantly restores the correct mapping from the committed architectural map.
+            </p>
+        </section>
+
+        <section class="project-results">
+            <h2>Results & Scalability</h2>
+            <p>
+                Because the backend structures (like the Map Table and Free List) are fully N-ported, the processor scales dynamically. During performance testing, optimal throughput was achieved at <strong>N=3 or N=4</strong>, effectively reducing the CPI from 9 to 5 on critical workloads.
+            </p>
+        </section>
+
+    </main>
+
+    <footer>
+        <h3>Nandan Kamath</h3>
+        <p>ASIC Design • Verification • Computer Architecture</p>
+    </footer>
+
+</body>
+</html>
