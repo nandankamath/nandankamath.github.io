@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R10K Processor | Nandan Kamath</title>
+    
+    <link rel="stylesheet" href="../styles.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">NK</div>
+        <div class="nav-links">
+            <a href="../index.html">← Back to Home</a>
+        </div>
+    </nav>
+
+    <main class="project-details">
+        
+        <h1>R10K Style Out-of-Order Processor</h1>
+        
+        <section class="project-overview">
+            <h2>Design Overview</h2>
+            <p>
+                Our team implemented the R10000 architecture, selecting it to reduce implementation risks due to a strong grasp of its structural logic. We engineered an N-way scaled out-of-order processor featuring advanced GShare branch prediction, prefetching with an unblocked instruction cache, and an associative data cache.
+            </p>
+        </section>
+
+        <section class="project-specs">
+            <h2>Component Specifications</h2>
+            <ul>
+                <li><strong>Reservation Station (RS):</strong> 8 entries.</li>
+                <li><strong>Reorder Buffer (ROB):</strong> 15 entries.</li>
+                <li><strong>Physical Registers (PR):</strong> 64 registers.</li>
+                <li><strong>Functional Units:</strong> 2 ALU, 2 Load, 2 Stores, 2 Mult.</li>
+                <li><strong>Instruction Cache:</strong> 256 bytes.</li>
+                <li><strong>Prefetcher:</strong> Looks 3 lines ahead.</li>
+                <li><strong>Store Queue (SQ):</strong> 8 entries.</li>
+                <li><strong>Data Cache:</strong> 256 bytes.</li>
+                <li><strong>PHT / BTB:</strong> 16 entries each.</li>
+            </ul>
+        </section>
+
+        <section class="project-pipeline">
+            <h2>Pipeline Architecture</h2>
+            <ul>
+                <li><strong>Fetch Stage:</strong> Retrieves up to two instructions per cycle. It requests 64-bit aligned blocks from the ICache using dynamic alignment logic and monitors the Instruction Queue to gracefully transition to a stall state upon detecting backpressure.</li>
+                <li><strong>Instruction Queue:</strong> A 2N-depth circular FIFO buffer supporting simultaneous read/writes. It uses a lookahead mechanism to pre-calculate dispatchable packets.</li>
+                <li><strong>Dispatch Stage:</strong> Parallelizes decoding, register renaming, and resource arbitration. Maps destination registers to physical tags from the Free List and assigns Store Queue indices.</li>
+                <li><strong>Reservation Station:</strong> Enables out-of-order issues by holding decoded instructions until dependencies are met. Accepts up to N new instructions and uses a parallel ready-mask against CDB broadcasts for instant wakeup.</li>
+                <li><strong>Reorder Buffer (ROB):</strong> Maintains precise state with a circular buffer supporting superscalar advancement. Ensures in-order retirement and acts as the central recovery unit during branch mispredictions.</li>
+                <li><strong>Free List & Map Table:</strong> The Free List exposes a vector of N candidate registers, while the Map Table handles dynamic architectural-to-physical mapping and instantly restores state from the committed architectural map during a flush.</li>
+            </ul>
+        </section>
+
+        <section class="project-memory">
+            <h2>Memory Interface</h2>
+            <ul>
+                <li><strong>Non-Blocking Instruction Cache:</strong> Utilizes dual memory ports to stream 4 instructions simultaneously, enabling a 3-instruction lookahead.</li>
+                <li><strong>Data Cache:</strong> A 4-way set-associative, write-allocate, write-back design managed through a controller FSM and a single-entry MSHR.</li>
+                <li><strong>Memory Controller:</strong> Manages backpressure by strictly prioritizing store commits over load requests.</li>
+            </ul>
+        </section>
+
+        <section class="project-features">
+            <h2>Advanced Features & Performance</h2>
+            <ul>
+                <li><strong>N-way Scalar Execution:</strong> Fully parameterized pipeline processing up to N instructions per cycle, supported by N-ported backend structures. Optimal performance was achieved at <strong>N=3 or N=4</strong>.</li>
+                <li><strong>Stream Buffer Prefetching:</strong> A non-blocking prefetcher scans a four-line lookahead window. This single addition yielded a <strong>~1.8x speedup</strong> on core benchmarks (improving CPI from 9 to 5).</li>
+                <li><strong>GShare Branch Predictor:</strong> Integrates a 4-bit branch history register, utilizing an XOR hash of the PC and history to index the Pattern History Table, alongside a tagged Branch Target Buffer to prevent aliasing.</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer>
+        <h3>Nandan Kamath</h3>
+        <p>ASIC Design • Verification • Computer Architecture</p>
+    </footer>
+
+</body>
+</html>
