@@ -121,3 +121,82 @@ footer{
     padding:100px 0;
     color:#777;
 }
+
+
+/* =========================================
+   PROJECT DETAILS PAGE STYLING
+   ========================================= */
+
+/* Center the entire page and restrict the width for readability */
+.project-details {
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 60px 20px;
+}
+
+/* Center the main title and lead text */
+.project-details h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.project-details .lead-text {
+    text-align: center;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: #b0b0b0; /* Soft gray for the intro text */
+    margin-bottom: 40px;
+}
+
+/* Center the diagram and caption */
+.diagram-container {
+    text-align: center;
+    margin: 40px 0;
+}
+
+.diagram-container img {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Adds a subtle shadow */
+}
+
+.diagram-container .caption {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #888888;
+}
+
+/* Fix the spacing for sections and headers */
+.project-details h2 {
+    font-size: 1.8rem;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333333; /* Nice subtle line under the header */
+    padding-bottom: 10px;
+}
+
+.project-details h3 {
+    font-size: 1.3rem;
+    margin-top: 35px;
+    margin-bottom: 10px;
+    color: #e0e0e0;
+}
+
+/* Fix paragraphs for optimal reading */
+.project-details p {
+    line-height: 1.7;
+    margin-bottom: 20px;
+    font-size: 1.05rem;
+}
+
+/* Fix the bullet points */
+.project-details ul {
+    list-style-type: disc;
+    margin-left: 40px; /* Indents the bullets properly */
+    margin-bottom: 30px;
+}
+
+.project-details li {
+    line-height: 1.7;
+    margin-bottom: 10px; /* Adds space between each list item */
+    font-size: 1.05rem;
+}
