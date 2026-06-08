@@ -28,6 +28,10 @@
         <p class="project-subtitle">Cadence Virtuoso • Cadence Innovus • Functional Verification • HSPICE</p>
         
         <section class="project-overview">
+            <div class="diagram-container">
+                <img src="risc.png" alt="16-Bit RISC Processor Block Diagram" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 20px 0;">
+                <p class="caption"><em>Top-level block diagram of 16-Bit RISC Processor</em></p>
+            </div>
             <p class="project-walkthrough">
                 For the design of our 16-Bit RISC Processor, we used a modular design methodology on the TSMC 65nm process on Cadence to ensure both functional correctness and optimal performance. We started with the transistor-level schematic and rigorous unit testing in Virtuoso, followed by speedpath simulations that helped optimize transistor sizing to improve our critical path performance while also keeping in mind the effect on power and area. These optimized modules were then successfully integrated with each other to create a top-level schematic. For the physical design, we used both custom hand layouts in Virtuoso for and automated Place and Route (P&R) via Innovus.
             </p>
