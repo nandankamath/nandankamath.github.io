@@ -78,13 +78,13 @@
             <p>We applied a modular testing strategy where we would extensively test each submodule to make sure that it was functionally correct. Upon functional correctness, we would connect it to another submodule. We split connecting all the components into 2 main pieces Fetch and then datapath. Once both modules were independently working we connected them with the instruction register.</p>
 
             <h3>Datapath Integration</h3>
-            <p>The Datapath starts with input from the IR. The data path contains the Decoder, Register File, ALU, DMEM IP, Shifter, and many control muxes. In order to connect and test the data path we started by connected the RF to the ALU followed by the Shifter, DMEM, and finally the decoder. We verified each submodule by manually inputing the control signals for each instruction we wanted to test. Ran into a lot of issues relating to redundant signals and clocking our modules at the correct clock edges which caused many instances of the wrong register or loaded value getting saved into a register.</p>
+            <p>The Datapath starts with input from the IR. The data path contains the Decoder, Register File, ALU, DMEM IP, Shifter, and many control muxes. In order to connect and test the data path we started by connected the RF to the ALU followed by the Shifter, DMEM, and finally the decoder. We verified each submodule by manually inputing the control signals for each instruction we wanted to test. Our group ran into a lot of issues relating to redundant signals and clocking our modules at the correct clock edges which caused many instances of the wrong register or loaded value getting saved into a register.</p>
 
             <h3>Fetch Integration</h3>
-            <p>The fetch stage contained our PC and IMEM and has a 16-bit output into the IR. We made sure to make sure that our PC was properly incrementing every clock cycle and manually tested to see if branch and jumps corresponded would go to the correct PC. Ran into a few issues relating to off by 1 errors on branches.</p>
+            <p>The fetch stage contained our PC and IMEM and has a 16-bit output into the IR. We made sure to make sure that our PC was properly incrementing every clock cycle and manually tested to see if branch and jumps corresponded would go to the correct PC. Our group ran into a few issues relating to off by 1 errors on branches.</p>
 
             <h3>Top Level Processor</h3>
-            <p>The final processor used the IR to merge both the fetch stage and datapath. We tested arithmetic, logic, shifts, conditional/unconditional jumps, jump and link registers.</p>
+            <p>The final processor used the IR to merge both the fetch stage and datapath. We tested arithmetic, logic, shifts, conditional/unconditional jumps, jump and link registers. Our group ran into multiple timing issues caused by receiving signals on the wrong cycle.</p>
             <div class="diagram-container">
                 <img src="test.png" alt="NC-Verilog test where we are computing then storing a value" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 20px 0;">
             </div>
