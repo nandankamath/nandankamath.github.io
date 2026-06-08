@@ -99,7 +99,7 @@
             <p>The primary objective of this project was to optimize processor speed through the implementation of a sparse Kogge-Stone Adder (KSA), accepting potential trade-offs in localized design complexity. The final simulated data from our TSMC 65nm design demonstrates that the architectural upgrade was highly successful.</p>
 
             <h3>Speed and Delay Reduction</h3>
-            <p>By shifting from a linear carry-select adder to the parallel prefix structure of the KSA, the computational delay was reduced from $$O(N)$$ to $$O(\log_2 N)$$.</p>
+            <p>By shifting from a linear carry-select adder to the parallel prefix structure of the KSA, the computational delay was reduced from O(N) to O(log N).</p>
             <ul>
                 <li><strong>ALU Performance:</strong> The rise and fall times of the ALU were reduced by an average of 272 picoseconds.</li>
                 <li><strong>Overall Datapath Impact:</strong> In the baseline processor, the critical path through the execution stage exhibited a 700 ps rise time and a 500 ps fall time. Because the ALU and Shifter operate in parallel, the ALU's speed dictated the processor's maximum frequency.</li>
