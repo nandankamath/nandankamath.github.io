@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Bit RISC Processor VLSI Design | Nandan Kamath</title>
+    
+    <link rel="stylesheet" href="../styles.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">NK</div>
+        <div class="nav-links">
+            <a href="../index.html">← Back to Home</a>
+        </div>
+    </nav>
+
+    <main class="project-details">
+        
+        <h1>16-Bit RISC Processor VLSI Design</h1>
+        
+        <p class="project-subtitle">TSMC 65nm • Cadence Virtuoso • Innovus • Kogge-Stone Architecture • HSPICE</p>
+        
+        <section class="project-overview">
+            <p class="lead-text">
+                For the design of our 16-Bit RISC Processor, we used a modular design methodology on the TSMC 65nm process on Cadence to ensure both functional correctness and optimal performance. We started with the transistor-level schematic and rigorous unit testing in Virtuoso, followed by speedpath simulations that helped optimize transistor sizing to improve our critical path performance while also keeping in mind the effect on power and area. These optimized modules were then successfully integrated with each other to create a top-level schematic. For the physical design, we used both custom hand layouts in Virtuoso for and automated Place and Route (P&R) via Innovus.
+            </p>
+        </section>
+
+        <section class="project-specs">
+            <h2>Architecture & Performance Summary</h2>
+            <ul class="spec-grid">
+                <li><strong>Process Node:</strong> TSMC 65nm CMOS</li>
+                <li><strong>Datapath Width:</strong> 16-Bit RISC</li>
+                <li><strong>Critical Path Upgrade:</strong> Radix-2 Kogge-Stone Adder</li>
+                <li><strong>ALU Footprint Reduction:</strong> ~32% Area Savings</li>
+                <li><strong>Overall Performance Gain:</strong> 23% Increase in Datapath Speed</li>
+            </ul>
+        </section>
+
+        <section class="project-walkthrough">
+            <h2>Pipeline Architecture and Implementation</h2>
+            <p>The processor's datapath is composed of several interdependent modules, each optimized for speed, area, and reliable signal propagation within the 65nm process footprint.</p>
+
+            <h3>Program Counter (PC)</h3>
+            <p>Our Program Counter contained a register that stored the current instruction PC value, and then, depending on the instruction, would decide to increment, branch, or jump. On a branch or jump instruction, the decoder would send a branch or jump signal to the PC to make sure that the instruction at the correct PC would be fetched from the Instruction Memory (IMEM). The PC supported our branch, conditional, jump conditional, and jump and link register instructions.</p>
+
+            <h3>Instruction Register (IR)</h3>
+            <p>The IR was our pipeline register and held the fetched instruction so that on the next cycle, it could be decoded, executed, and written back.</p>
+
+            <h3>Instruction Decoder</h3>
+            <p>The instruction decoder received a 16-bit instruction from the IR and using opcodes and opcode extensions from a predefined ISA, a set of control signals would be sent to the Register File, Data Memory, ALU, PC, shifter, and many multiplexors used for data flow to complete the given instruction.</p>
+
+            <h3>Register File (RF)</h3>
+            <p>Our Register File (RF) features two read ports and one write port in a given cycle, allowing an instruction to access two different registers and write to a third register all within a single cycle. To achieve this, the design utilizes a master-slave configuration consisting of a 16-bit master register connected to a 16-wide array of 16-bit slave registers that store the processor's active register values. Write-enable clock drivers manage the write signals, driving the master register on the negative edge of the clock and the slave registers on the positive edge of the clock to ensure that newly calculated or loaded values are written accurately. Finally, two output buffers connect to all the registers, providing the correct register reads for given operations based on incoming read signals.</p>
+
+            <h3>Sign Extension Unit</h3>
+            <p>To handle instructions that utilize immediate values (such as load/store offsets or immediate value arithmetic), this combinational block takes an 8-bit immediate from the instruction and sign-extends it to 16 bits. It achieves this by using the most significant bit (MSB) as a multiplexer select line, duplicating the value of the MSB across the 8 newly added upper bits.</p>
+
+            <h3>Arithmetic Logic Unit (ALU)</h3>
+            <p>handles addition, subtraction, comparison, and logical operations (AND, OR, XOR). Originally, arithmetic operations were implemented using a carry-select adder, which pre-calculated partial sums for both possible carry-in states (0 and 1) and then selected the correct sum once the previous stage completed. However, because each addition cell relied on a mirror adder topology, it was difficult to share internal hardware logic with the logical operations. To address this, the final design utilizes a decoder that sets the initial carry-in to 0 for addition and 1 for subtraction or comparison, while simultaneously XORing the second operand for the latter two operations. In parallel, dedicated 16-bit AND, OR, and XOR blocks calculate their respective results, allowing a final multiplexer to select the correct output based on the specific instruction.</p>
+            <p>After running some tests in HSPICE and seeing how large our layout was, we optimized our performance, power, and area by replacing the carry-select adder with a radix-2 Kogge-Stone parallel prefix architecture. Because the preprocessing stage of the Kogge-Stone adder natively computes propagate ($P$) and generate ($G$) signals via bitwise XOR and AND operations, we were able to directly reuse this internal hardware logic to serve the ALU's logical instructions, drastically saving layout area by eliminating the redundant parallel blocks. This optimization allowed us to reduce the adder's footprint by approximately 32%, shrinking it from its original dimensions of 125 µm × 19 µm down to 65 µm × 25 µm. Furthermore, this upgrade transformed our computational delay from $O(N)$ to $O(\log_2 N)$, slashing average rise and fall times by 272 picoseconds—bringing rise times down from 467 ps to 132 ps, and fall times from 336 ps to 128 ps—culminating in a massive 23% increase in overall datapath speed.</p>
+
+            <h3>Shifter</h3>
+            <p>Operates in parallel with the ALU to perform logical and arithmetic bit shifts. It was implemented as a multiplexer-based barrel shifter to allow multi-bit shifts in a single clock cycle. Because the shifter and ALU sit in parallel within the execute stage, optimizing the slower of the two (the ALU) was critical, as it dictated the critical path delay of the entire datapath.</p>
+        </section>
+
+        <section class="project-integration">
+            <h2>Connecting All the Parts</h2>
+            <p>Building the individual modules was only half the challenge. The true complexity of the microprocessor design was relating to connecting these components into a functioning processor.</p>
+
+            <h3>Testing Strategy</h3>
+            <p>We applied a modular testing strategy where we would extensively test each submodule to make sure that it was functionally correct. Upon functional correctness, we would connect it to another submodule. We split connecting all the components into 2 main pieces Fetch and then datapath. Once both modules were independently working we connected them with the instruction register.</p>
+
+            <h3>Datapath Integration</h3>
+            <p>The Datapath starts with input from the IR. The data path contains the Decoder, Register File, ALU, DMEM IP, Shifter, and many control muxes. In order to connect and test the data path we started by connected the RF to the ALU followed by the Shifter, DMEM, and finally the decoder. We verified each submodule by manually inputing the control signals for each instruction we wanted to test. Ran into a lot of issues relating to redundant signals and clocking our modules at the correct clock edges which caused many instances of the wrong register or loaded value getting saved into a register.</p>
+
+            <h3>Fetch Integration</h3>
+            <p>The fetch stage contained our PC and IMEM and has a 16-bit output into the IR. We made sure to make sure that our PC was properly incrementing every clock cycle and manually tested to see if branch and jumps corresponded would go to the correct PC. Ran into a few issues relating to off by 1 errors on branches.</p>
+
+            <h3>Top Level Processor</h3>
+            <p>The final processor used the IR to merge both the fetch stage and datapath. We tested arithmetic, logic, shifts, conditional/unconditional jumps, jump and link registers.</p>
+
+            <h3>Physical Layout and Routing Strategy</h3>
+            <p>Connecting these parts in the layout required meticulous spatial planning to avoid a complex web of crisscrossing wires. We prototyped the overarching floorplan early in the design process to dictate the I/O pin placement for each individual module.</p>
+            <p>By aligning corresponding inputs and outputs such as placing the input pins of the execution multiplexers at the top of their block to directly catch the signals coming from the RF output pins at the bottom of its block we significantly reduced wire length which reduces capacitance and delay. This strategy not only improved readability and debugging ease but also minimized parasitic interconnect capacitance within Cadence Innovus, which was a critical factor in meeting our speedpath goals on the TSMC 65nm node.</p>
+        </section>
+
+        <section class="project-results">
+            <h2>Results and Performance Analysis</h2>
+            <p>The primary objective of this project was to optimize processor speed through the implementation of a sparse Kogge-Stone Adder (KSA), accepting potential trade-offs in localized design complexity. The final simulated data from our TSMC 65nm design demonstrates that the architectural upgrade was highly successful.</p>
+
+            <h3>Speed and Delay Reduction</h3>
+            <p>By shifting from a linear carry-select adder to the parallel prefix structure of the KSA, the computational delay was reduced from $$O(N)$$ to $$O(\log_2 N)$$.</p>
+            <ul>
+                <li><strong>ALU Performance:</strong> The rise and fall times of the ALU were reduced by an average of 272 picoseconds.</li>
+                <li><strong>Overall Datapath Impact:</strong> In the baseline processor, the critical path through the execution stage exhibited a 700 ps rise time and a 500 ps fall time. Because the ALU and Shifter operate in parallel, the ALU's speed dictated the processor's maximum frequency.</li>
+                <li><strong>Final Speedup:</strong> The new KSA implementation directly translated to a 23% reduction in overall delay, yielding a proportional 23% increase in processing speed.</li>
+            </ul>
+
+            <h3>Area Optimization</h3>
+            <ul>
+                <li><strong>Baseline Carry-Select Adder:</strong> 125 µm wide × 19 µm tall.</li>
+                <li><strong>Upgraded Kogge-Stone Adder:</strong> 65 µm wide × 25 µm tall.</li>
+            </ul>
+            <p>Despite the added complexity of the generate, propagate, and preprocessing networks, optimizing the layout of the KSA in Cadence Virtuoso resulted in an adder area reduction of approximately 32%. This localized space saving, combined with the 23% speed increase, validated the decision to transition to the Kogge-Stone architecture.</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <h3>Nandan Kamath</h3>
+        <p>ASIC Design • Verification • Computer Architecture</p>
+    </footer>
+
+</body>
+</html>
