@@ -51,6 +51,9 @@
             <p>The instruction decoder received a 16-bit instruction from the IR and using opcodes and opcode extensions from a predefined ISA, a set of control signals would be sent to the Register File, Data Memory, ALU, PC, shifter, and many multiplexors used for data flow to complete the given instruction.</p>
 
             <h3>Register File (RF)</h3>
+            <div class="diagram-container">
+                <img src="rf.png" alt="Multi-ported Master-Slave Register cell topology" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 20px 0;">
+            </div>
             <p>Our Register File (RF) features two read ports and one write port in a given cycle, allowing an instruction to access two different registers and write to a third register all within a single cycle. To achieve this, the design utilizes a master-slave configuration consisting of a 16-bit master register connected to a 16-wide array of 16-bit slave registers that store the processor's active register values. Write-enable clock drivers manage the write signals, driving the master register on the negative edge of the clock and the slave registers on the positive edge of the clock to ensure that newly calculated or loaded values are written accurately. Finally, two output buffers connect to all the registers, providing the correct register reads for given operations based on incoming read signals.</p>
 
             <h3>Sign Extension Unit</h3>
@@ -58,6 +61,9 @@
 
             <h3>Arithmetic Logic Unit (ALU)</h3>
             <p>handles addition, subtraction, comparison, and logical operations (AND, OR, XOR). Originally, arithmetic operations were implemented using a carry-select adder, which pre-calculated partial sums for both possible carry-in states (0 and 1) and then selected the correct sum once the previous stage completed. However, because each addition cell relied on a mirror adder topology, it was difficult to share internal hardware logic with the logical operations. To address this, the final design utilizes a decoder that sets the initial carry-in to 0 for addition and 1 for subtraction or comparison, while simultaneously XORing the second operand for the latter two operations. In parallel, dedicated 16-bit AND, OR, and XOR blocks calculate their respective results, allowing a final multiplexer to select the correct output based on the specific instruction.</p>
+            <div class="diagram-container">
+                <img src="kg.png" alt="Kogge-Stone Adder topology" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 20px 0;">
+            </div>
             <p>After running some tests in HSPICE and seeing how large our layout was, we optimized our performance, power, and area by replacing the carry-select adder with a radix-2 Kogge-Stone parallel prefix architecture. Because the preprocessing stage of the Kogge-Stone adder natively computes propagate ($P$) and generate ($G$) signals via bitwise XOR and AND operations, we were able to directly reuse this internal hardware logic to serve the ALU's logical instructions, drastically saving layout area by eliminating the redundant parallel blocks. This optimization allowed us to reduce the adder's footprint by approximately 32%, shrinking it from its original dimensions of 125 µm × 19 µm down to 65 µm × 25 µm. Furthermore, this upgrade transformed our computational delay from $O(N)$ to $O(\log_2 N)$, slashing average rise and fall times by 272 picoseconds—bringing rise times down from 467 ps to 132 ps, and fall times from 336 ps to 128 ps—culminating in a massive 23% increase in overall datapath speed.</p>
 
             <h3>Shifter</h3>
@@ -79,7 +85,10 @@
 
             <h3>Top Level Processor</h3>
             <p>The final processor used the IR to merge both the fetch stage and datapath. We tested arithmetic, logic, shifts, conditional/unconditional jumps, jump and link registers.</p>
-
+            <div class="diagram-container">
+                <img src="test.png" alt="NC-Verilog test where we are computing then storing a value" style="width: 100%; max-width: 800px; border-radius: 8px; margin: 20px 0;">
+            </div>
+            
             <h3>Physical Layout and Routing Strategy</h3>
             <p>Connecting these parts in the layout required meticulous spatial planning to avoid a complex web of crisscrossing wires. We prototyped the overarching floorplan early in the design process to dictate the I/O pin placement for each individual module.</p>
             <p>By aligning corresponding inputs and outputs such as placing the input pins of the execution multiplexers at the top of their block to directly catch the signals coming from the RF output pins at the bottom of its block we significantly reduced wire length which reduces capacitance and delay. This strategy not only improved readability and debugging ease but also minimized parasitic interconnect capacitance within Cadence Innovus, which was a critical factor in meeting our speedpath goals on the TSMC 65nm node.</p>
