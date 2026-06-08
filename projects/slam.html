@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic SLAM Acceleration | Nandan Kamath</title>
+    
+    <link rel="stylesheet" href="../styles.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        .table-container {
+            margin: 25px 0;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #141414;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #252525;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #252525;
+            color: #d0d0d0;
+            font-size: 1rem;
+        }
+        th {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .authors {
+            text-align: center;
+            color: #888888;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+    </style>
+
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$']]
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">NK</div>
+        <div class="nav-links">
+            <a href="../index.html">← Back to Home</a>
+        </div>
+    </nav>
+
+    <main class="project-details">
+        
+        <h1>Semantic SLAM Acceleration</h1>
+        
+        <p class="project-subtitle">AMD Versal SoC • RangeNet++ • SG-SLAM • AIE-ML • IPC</p>
+        <p class="authors"><strong>Group 6:</strong> Nandan Kamath, Siddarth Satish, Jacob Tkaczyk, Fa Yan</p>
+        
+        <section class="project-overview">
+            <p class="lead-text">
+                This paper presents a hardware acceleration framework for real-time semantic simultaneous localization and mapping (SLAM) by targeting the AI/ML kernel on an AMD Versal adaptive SoC. We accelerate the RangeNet++ DarkNet53 inference using the AIE-ML architecture and a tiled execution strategy to exploit parallelism. 
+            </p>
+            <p class="lead-text">
+                At the system level, SG-SLAM uses a customized, tailored ring buffer shared-memory path to bypass ROS2 message passing, and graph construction is split across multiple threads to better use the CPU. Together, these changes keep the pipeline operating at the target 10 Hz frame frequency.
+            </p>
+            <p class="lead-text">
+                We also attempted to accelerate the ICP registration backend, but the correspondence search and normal-equation accumulation were too sequential and dependency-bound to benefit from hardware offload. The measured results show that this path was not a worthwhile acceleration target.
+            </p>
+            <p class="lead-text">
+                This work demonstrates a practical path for combining AI/ML acceleration with lightweight system integration improvements in edge-constrained autonomous systems.
+            </p>
+        </section>
+
+        <section class="project-walkthrough">
+            <h2>Introduction</h2>
+            <p>Simultaneous localization and mapping (SLAM) is a fundamental capability for autonomous systems, enabling robots to estimate their pose while constructing a representation of the surrounding environment. Recent advances in semantic SLAM incorporate deep neural network-based perception to enhance robustness in dynamic and unstructured environments by leveraging high-level scene understanding. In particular, semantic segmentation enables the identification of dynamic objects and improves data association during registration. However, these benefits come at a significant computational cost, making real-time deployment on resource-constrained platforms challenging.</p>
+            
+            <p>A major bottleneck in modern semantic SLAM pipelines is the latency of deep neural network inference. Architectures such as RangeNet-based models, which process LiDAR data for semantic segmentation, can dominate the overall system runtime, often exceeding the time budget imposed by real-time sensor rates. For example, a pure PyTorch GPU implementation with no extra accelerations takes about 231.4 ms for RangeNet inference and 292.4 ms end-to-end, still exceeding the 100.0 ms constraint of a 10.0 Hz LiDAR sensor. This mismatch prevents full utilization of incoming sensor data and limits deployment in real-world autonomous systems, particularly in edge environments where power and compute resources are constrained.</p>
+
+            <p>To address this challenge, this work proposes a hardware acceleration framework for semantic SLAM that targets the inference stage of the pipeline. Specifically, we accelerate RangeNet DarkNet53 using the artificial intelligence engine (AIE-ML) architecture on AMD Versal adaptive system-on-chip platforms. By combining INT8 quantization, fused operator design, spatial tiling, IPC shared memory, and multithreaded graph construction, the proposed approach exploits fine-grained parallelism to improve system throughput while maintaining energy efficiency.</p>
+
+            <p>In addition to accelerating semantic inference, we attempted a staged optimization of the ICP registration backend. The effort focused on the correspondence-based normal-equation accumulation in <code>AlignClouds</code>, where the solver builds $J^T J$ and $J^T r$ from matched source and target points. In practice, the loop proved too sequential and dependency-bound to parallelize effectively, and the registration math was not a dominant bottleneck, so the hardware port did not produce a meaningful speedup.</p>
+
+            <p>A key contribution of this work is a rigorous and reproducible evaluation methodology that distinguishes between measured software performance and hardware synthesis-based projections. By combining end-to-end pipeline profiling with component-level benchmarking, we provide a transparent analysis of system behavior and clearly quantify the impact of each optimization stage.</p>
+
+            <p>Experimental results demonstrate that the proposed accelerator reduces semantic inference latency from 231.4 ms to 16.0 ms, achieving a 14.5× speedup while reducing power consumption from 222.0 W to 12.7 W. When integrated into the full SG-SLAM pipeline, this improvement reduces end-to-end latency from 292.4 ms to 42.3 ms per frame, meeting real-time constraints. The attempted registration offload was not worthwhile because the loop is highly sequential and dependency-bound.</p>
+
+            <div class="metrics-box">
+                <h4>Main Contributions:</h4>
+                <ul>
+                    <li>A hardware-accelerated implementation of RangeNet DarkNet53 targeting AIE-ML architectures with INT8 quantization and fused operators.</li>
+                    <li>A shared-memory IPC design using a customized ring buffer, bypassing ROS2 message passing for lower integration overhead.</li>
+                    <li>Parallel multithreading of SG-SLAM graph construction to better use the CPU.</li>
+                    <li>A reproducible benchmarking and profiling framework that separates measured performance from hardware projections.</li>
+                    <li>A comprehensive evaluation demonstrating significant improvements in latency, power efficiency, and real-time feasibility for edge deployment.</li>
+                </ul>
+            </div>
+
+            <h2>Methodology</h2>
+            
+            <h3>Benchmarking</h3>
+            <p>Benchmarking used the same artifacts that generated the reported results. The system-level run was executed on an AWS <code>g5.xlarge</code> instance with an NVIDIA A10G GPU, replaying all 4,541 scans from KITTI sequence 00 through the non-ROS <code>RangeNet -&gt; IPC -&gt; SG-SLAM</code> path. The run logs preserve the exact environment and outputs under <code>aws_runs/20260419T162450Z</code>: the producer manifest records CUDA execution, 10.0 Hz requested playback, eight IPC slots, and the full scan count; the producer trace records per-frame point loading, inference, publish time, and dropped-frame count; and the SG-SLAM consumer trace records acquisition wait, frontend time, skipped frames, and odometry output. The completed ordered run exited cleanly, with 4,541 producer frames, 4,344 consumed SG-SLAM frames, 4,344 odometry lines, 196 producer-side drops, and 197 consumer-side skipped frames.</p>
+
+            <p>The graph-construction optimization was measured separately with the dedicated <code>BuildGraph()</code> benchmark in <code>eval/buildgraph</code>. Each before/after run used the release benchmark binary with <code>-DENABLE_MILESTONE1_BENCHMARKS=ON</code>, 20 warmup frames, 150 timed frames, seed 570, and identical graph parameters: <code>--edge-th 40 --subinterval 40 --node-dim 8 --subgraph-edge-th 20</code>. The sweep tested 64, 128, 256, and 512 nodes per frame, and the saved logs report average, p50, p95, throughput, and graph edge counts for each case.</p>
+
+            <p>This setup measured three concrete questions:</p>
+            <ol>
+                <li>Can the AWS GPU producer, shared-memory IPC path, and SG-SLAM consumer process a full KITTI sequence without manual intervention?</li>
+                <li>What latency and frame-drop behavior does that live path show at a requested 10.0 Hz playback rate?</li>
+                <li>How much does the optimized <code>BuildGraph()</code> implementation improve graph-construction latency at fixed graph sizes?</li>
+            </ol>
+
+            <h3>Dataset and Input Processing</h3>
+            <p>Benchmarking was conducted using sequence 0.0 from the KITTI dataset. The point cloud and semantic label interfaces were treated as strict data contracts to prevent silent data mismatches during testing.</p>
+            <p>Rather than relying on manual data handling, custom export tools were used to generate deterministic, version-controlled label sets. These tools enforced strict validation checks on point counts and file sizes, producing trace logs that allow every benchmark run to be tied back to its exact source data and configuration.</p>
+
+            <h3>AIE-ML Kernel Selection</h3>
+            <p>The semantic inference accelerator targets the AI/ML engine array rather than a conventional FPGA-fabric systolic array. RangeNet DarkNet53 is dominated by convolution and transposed-convolution layers, totaling about 376.4 GMAC per KITTI frame at the 64 × 2048 input resolution. At a 10.0 Hz LiDAR rate, this requires several tera-operations per second before accounting for feature-map movement, skip connections, quantization, and host integration overhead.</p>
+
+            <p>A fabric-only FPGA design was not selected because the available DSP budget limits the practical systolic array size. With the DSP count available for the design, the largest reasonable dense matrix engine was approximately 60 × 64, or 3,840 parallel multiply-accumulate cells. At typical FPGA fabric clock rates, that corresponds to roughly 2 TOPS under ideal utilization. This is too low for RangeNet: the ideal lower bound alone is near or above the 100.0 ms frame budget once multiply and add operations are counted, and a real design would be slower because weights must be streamed from external memory and the network has many layer boundaries.</p>
+
+            <p>The AIE-ML path was therefore used for the neural network portion. The design maps convolution to tiled INT8 matrix multiplication using hardware-native matrix intrinsics. Each convolution tile is lowered with an im2col-style formulation: local input windows are packed into a GEMM matrix, weights are stored in the matching matrix layout, and the kernel computes the output-channel block through the AIE-ML matrix multiply unit. The RangeNet input is divided into spatial tiles of 8.0 × 32.0 pixels and channel blocks of 32.0 input and 32.0 output channels.</p>
+
+            <p>Four kernel types cover the network structure: 3.0×3.0 convolution, stride-2.0 3.0×3.0 convolution, 1.0×1.0 pointwise convolution, and residual element-wise addition. The convolution kernels include fused post-processing so intermediate tensors do not need separate BatchNorm, requantization, or activation passes. BatchNorm is folded into the exported weights, the accumulated INT32 result is requantized back to INT8 using per-channel scale factors, and LeakyReLU is applied inside the kernel before writing the output tile. Layers with more than 32.0 channels are executed as repeated channel-block kernel calls with partial sums accumulated across input-channel blocks. This matches the regular structure of RangeNet while avoiding the DSP and clock-frequency limits of a pure programmable-logic systolic array.</p>
+
+            <p>The kernels were connected using an ADF graph and PLIO interfaces. The ADF graph instantiates the compute kernels, defines the tile-to-tile dataflow, and connects the kernels to PLIO streams for input feature tiles, weights, scale parameters, and output feature tiles. This made the design testable at the kernel level and at the graph level: the same layer golden vectors could be streamed through the AIE graph to check numerical correctness before using the latency estimates in the system-level projection.</p>
+
+            <h3>Shared-Memory IPC Integration</h3>
+            <p>The live RangeNet-to-SG-SLAM path was an engineering integration effort, not a feature provided by the original projects. RangeNet++ and SG-SLAM are separate codebases: RangeNet++ performs LiDAR semantic segmentation, while the original SG-SLAM pipeline expects point clouds together with pre-generated semantic label files on disk. In other words, upstream SG-SLAM was designed around an offline, file-based input contract rather than a live neural-network producer. We built the custom <code>rangenet_sgslam_ipc</code> bridge to connect these two systems directly.</p>
+
+            <p>The bridge replaces the offline label-file handoff with a shared-memory communication protocol. Instead of writing RangeNet predictions as per-frame label files and making SG-SLAM reload them later, the IPC layer sends each labeled LiDAR scan as one complete frame through a POSIX shared-memory ring. This allows the GPU producer and SG-SLAM consumer to run as separate processes while still behaving like one live pipeline, avoiding ROS message serialization and per-frame filesystem traffic.</p>
+
+            <p>The protocol is intentionally single-producer, single-consumer because the deployed path has exactly one RangeNet streamer and one SG-SLAM frontend. The public contract is defined in <code>rnsg_ipc.h</code>. Each ring has a fixed number of slots, with the default set to eight slots and 200,000 points per slot. A slot contains a fixed header, a <code>float[num_points][4]</code> point array for x, y, z, and remission, and an <code>int32</code> label array in the same point order. The header records the frame id, capture timestamp, publish timestamp, point count, payload offsets, and a flag indicating that labels are raw SemanticKITTI ids. Keeping raw labels in the payload preserves SG-SLAM ownership of label remapping and dynamic-object filtering.</p>
+
+            <p>On the producer side, <code>stream_sgslam_ipc.py</code> creates the ring, loads each KITTI scan, runs RangeNet inference, and validates that the number of predicted labels matches the number of points. It then calls <code>Producer.lease()</code> to obtain a writable NumPy view directly over the next shared-memory slot, copies the point cloud and labels into that slot, and commits the frame with <code>Producer.publish()</code>. The trace written by the producer records frame id, scan path, point count, slot index, requested and actual capture time, inference time, copy-to-ring time, publish time, and ring drop counters, which made the AWS run auditable without rerunning it.</p>
+
+            <p>On the SG-SLAM side, <code>IpcFrameSource</code> opens the same ring name and calls <code>rnsg_consumer_acquire()</code> with a bounded timeout. A successful acquire returns const pointers directly into shared memory; <code>FrameLease</code> wraps those pointers in a <code>BorrowedFrameView</code> consumed by <code>SemGraphSLAM::mainProcess</code>. The lease destructor calls <code>rnsg_consumer_release()</code>, so the slot is returned even when control leaves the processing loop early. This acquire/release lifetime is the main safety rule: while SG-SLAM holds a frame, the producer cannot overwrite that slot; after release, the producer may reuse it immediately.</p>
+
+            <p>The ring uses a drop-oldest policy to keep the producer nonblocking at the requested LiDAR rate. Each slot has one atomic sequence value: zero means empty or being written, <code>seq + 1</code> means published, and a high-bit-held form means the consumer currently owns the slot. The producer first searches for a free slot; if none exists, it overwrites the oldest published slot that is not held. The consumer reports any overwritten frames as <code>skipped_before</code>, while <code>drop_count</code>, <code>head_seq</code>, and <code>tail_seq</code> expose ring health in the logs. This design favors fresh frames over backlog growth, which is the correct behavior for real-time LiDAR processing.</p>
+
+            <p>The implementation also separates producer traceability from SG-SLAM structural indexing. <code>frame_id</code> is the source scan id and can have gaps when frames are dropped. <code>consumed_index</code> is dense and increments once per successful SG-SLAM acquire. The runner uses <code>consumed_index</code> when pushing scans into the mapping queue, preventing sparse producer ids from corrupting pose-vector indexing or GTSAM graph keys. This distinction is tested in the IPC unit tests and was important for preserving graph consistency during the AWS sequence replay.</p>
+
+            <h3>Multithreaded Graph Construction</h3>
+            <p>SG-SLAM builds a semantic graph from clustered object bounding boxes on every frame. Each node stores a semantic label, 3D center, dimensions, point count, local histogram descriptor, global graph descriptor, and local triangle structure used later for matching and loop-closure logic. The expensive part is the all-pairs distance pass in <code>BuildGraph()</code>, which checks every node pair against the edge threshold, fills the adjacency and edge-distance matrices, updates per-node local semantic histograms, and records nearby neighbors for subgraph triangle construction.</p>
+
+            <p>This graph construction was parallelized with Intel TBB because most of the work is independent per source node. The main $O(N^2)$ loop is now a <code>tbb::parallel_for</code> over node index <code>i</code>. Each worker owns one row of the adjacency matrix, one row of the edge matrix, one row of the local embedding matrix, and one <code>subgraph_neighbors[i]</code> vector, so the parallel region avoids shared writes except for read-only access to node centers and labels. After the row-wise distance pass, the code performs the remaining serial edge-list compaction and eigenvector-based global embedding step, then uses two more <code>tbb::parallel_for</code> regions to copy node descriptors and enumerate local subgraph triangles per node.</p>
+
+            <p>The optimization keeps the graph format unchanged: downstream registration, loop closure, and mapping code still receives the same <code>Graph</code> structure with adjacency-derived descriptors, edge weights, and triangle signatures. That made it a low-risk acceleration because it improved CPU utilization without changing the graph-matching contract. A dedicated <code>benchmark_buildgraph</code> microbenchmark measured the impact using 20 warmup frames, 150 timed frames, seed 570, and fixed graph parameters. The optimized implementation improved every tested graph size: 64 nodes dropped from 0.4858 ms to 0.3510 ms, 128 nodes from 2.7769 ms to 2.0866 ms, 256 nodes from 19.5040 ms to 12.5655 ms, and 512 nodes from 147.0508 ms to 93.9907 ms. The largest case therefore improved by 1.56×, raising throughput from 6.80 FPS to 10.64 FPS.</p>
+
+            <h3>Attempted Registration FPGA Port</h3>
+            <p>The registration phase was evaluated using an incremental hardware-porting strategy, but the full Iterative Closest Point (ICP) offload was not successful. We ported the correspondence search and normal-equation accumulation stage ($J^T J$ and $J^T r$ construction) to a hardware-compatible kernel, but the loop structure is highly sequential and depends on the previous iteration state. As a result, outer ICP control flow, the linear solve, and convergence checks remain on the host CPU, and the attempted hardware port did not yield a worthwhile improvement.</p>
+
+            <p>Within the hardware path, the kernel computes residuals, evaluates Jacobian products, and applies robust semantic weighting. Retaining this semantic and dynamic-class suppression logic ensures the accelerated system maintains its original algorithmic fidelity and robustness in dynamic scenes. To satisfy strict hardware synthesis requirements for predictable memory usage, the kernel enforces a fixed upper bound of 16,384.0 correspondences. Any dropped correspondences are explicitly reported to the runtime, ensuring data truncation remains transparent and auditable during benchmarking.</p>
+
+            <p>Rather than replacing the CPU implementation, a formal backend abstraction layer was introduced. This unified interface allows the system to seamlessly switch between the software baseline, a hardware-emulation prototype, and future physical hardware execution, complete with robust safety fallbacks.</p>
+
+            <p>Because the host CPU still orchestrates the outer ICP loop, each iteration incurs unavoidable host-side overhead and the dependency chain leaves little room for parallelism. The attempt also showed that this math is not a primary bottleneck in the pipeline. To account for this and guarantee fair, apples-to-apples comparisons, dedicated microbenchmarking and full-pipeline profiling track the active backend context to prevent attribution errors.</p>
+
+            <h3>Verification and Reference Outputs</h3>
+            <p>Verification was based on saved reference artifacts rather than visual inspection. For the RangeNet accelerator path, the pretrained DarkNet53 ONNX model under <code>data/pretrained_darknet53_weights</code> was first converted into a hardware-testable form by <code>fpga/export_weights.py</code>. That script folds BatchNorm into the convolution weights, strips the softmax tail because segmentation only requires the logit argmax, exports little-endian binary weight and bias files for each convolution and deconvolution layer, and writes a manifest describing layer names, shapes, data type, and byte order. It also runs a fused-model check against the original ONNX model and reports argmax agreement, so the exported model is verified before it is used as a hardware reference.</p>
+
+            <p>Layer-level golden vectors were then generated with <code>fpga/generate_golden.py</code>. The script loads the fused ONNX model and the exported layer manifest, attaches intermediate ONNX outputs at each layer boundary, and runs deterministic synthetic inputs with seeds 0, 1, and 42. For each frame, it writes <code>input.bin</code>, per-layer tensor files such as convolution input, convolution output, post-activation, and post-residual outputs, plus final <code>logits.bin</code> and <code>labels.bin</code>. Each frame also receives a JSON manifest recording tensor names, shapes, files, and layer indices. These files are stored under <code>fpga/golden_vectors/frame_XXXX</code> and mirrored in S3 as an 11 GB golden-vector set, giving the HLS and AIE kernel tests fixed expected outputs for bitwise or tolerance-based comparison at every layer.</p>
+
+            <p>The SG-SLAM side used reference pose output to verify that integration changes did not break the odometry path. The IPC runner writes KITTI-format 3×4 pose rows to <code>kitti_odometry_00.txt</code>; each row contains the estimated camera/LiDAR pose for one consumed frame. In the AWS full-sequence run, the consumer wrote 4,344 odometry rows under <code>remote-results/kitti_odometry_00.txt</code>. Keeping this file with the producer trace and consumer trace makes the run reproducible: changes to the shared-memory handoff, label mapping, frontend processing, or graph-construction indexing can be checked against the same reference pose sequence instead of relying only on runtime logs.</p>
+
+
+            <h2>Results</h2>
+            <p>This section presents the performance evaluation of the proposed AIE-ML accelerator for RangeNet DarkNet53 inference within the SGSlam pipeline. The primary design target is reducing end-to-end latency below the 100.0 ms LiDAR frame period to enable real-time semantic segmentation. Results are organized around the three implemented acceleration paths: AIE-ML inference kernels, shared-memory IPC integration, and parallel multithreaded graph construction.</p>
+
+            <h3>Quantization Profiling and Selection</h3>
+            <p>Quantization was profiled before fixing the accelerator datapath. The study used 10 KITTI sequence 00 frames against GPU-produced FP32 labels as the golden reference. The original INT8 and INT16 runs were executed on the AWS NVIDIA A10G instance, and the INT6/INT4 extension was rerun on CPU after validating that the CPU FP32 output stayed within 0.005% of the golden labels. The reported metric is point-label mismatch: the percentage of points whose predicted semantic label changed relative to the reference.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scenario</th>
+                            <th>Mismatch</th>
+                            <th>Decision</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>FP32 vs. golden</td>
+                            <td>0.00%</td>
+                            <td>Reference</td>
+                        </tr>
+                        <tr>
+                            <td>INT16 weight + INT16 activation</td>
+                            <td>0.01%</td>
+                            <td>Accurate but larger datapath</td>
+                        </tr>
+                        <tr>
+                            <td>INT8 weight only</td>
+                            <td>0.20%</td>
+                            <td>Accurate, but activations remain high precision</td>
+                        </tr>
+                        <tr>
+                            <td>INT8 weight + INT8 activation, per-channel</td>
+                            <td>1.11%</td>
+                            <td>Selected hardware target</td>
+                        </tr>
+                        <tr>
+                            <td>INT8 weight + INT8 activation, per-layer</td>
+                            <td>20.6%</td>
+                            <td>Rejected: activation scale too coarse</td>
+                        </tr>
+                        <tr>
+                            <td>INT6 weight + INT6 activation, per-channel</td>
+                            <td>20.73%</td>
+                            <td>Rejected: too much accuracy loss</td>
+                        </tr>
+                        <tr>
+                            <td>INT4 weight + INT4 activation, per-channel</td>
+                            <td>81.97%</td>
+                            <td>Rejected: unusable with plain PTQ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>The final design uses INT8 weights and INT8 activations with per-channel activation scaling. INT16 was nearly lossless, but it gives up much of the hardware benefit because the multipliers, storage, and memory bandwidth remain larger. INT8 weight-only quantization was also accurate, but it does not fully convert the inference datapath to 8-bit arithmetic. Per-channel INT8 activation scaling was the best trade-off: it kept the mean mismatch near 1.0% while enabling 8-bit multipliers and a 4.0× model-size reduction from 201.0 MB to 50.0 MB. The lower-precision INT6 and INT4 post-training runs were rejected because per-channel scaling alone did not prevent large label changes; those options would require quantization-aware training or a mixed-precision design.</p>
+
+            <p>Batch normalization parameters were folded into the convolution weights prior to quantization, eliminating separate BN computation on the accelerator. The fused weight is computed as:</p>
+            <p>
+                $$w'_{folded} = w \cdot \frac{\gamma}{\sqrt{\sigma^{2.0} + \epsilon}}$$
+            </p>
+            <p>with the bias term absorbing both the BN offset and running mean. Per-channel scale factors are computed as $s_c = \max(|w_c|) / 127.0$ across each output channel, preserving the weight distribution while maximizing the INT8 dynamic range.</p>
+
+            <h3>AIE Kernel Performance</h3>
+            <p>Cycle-approximate simulation was performed using the AMD <code>aiesimulator</code> targeting the Versal VE2302.0 (XCVE2302.0) at 1.0 GHz AIE-ML clock frequency. Functional checks were also run with the x86 simulator before cycle estimation, allowing the same kernel code and ADF graph structure to be debugged quickly before invoking the slower AIE simulator. Each kernel was evaluated on a single tile processing one spatial tile of 8.0 × 32.0 pixels with 32.0 input and 32.0 output channels. Table below summarizes the per-tile cycle counts for each of the four kernel types used in the RangeNet forward pass.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kernel</th>
+                            <th>Cycles</th>
+                            <th>Time ($\mu$s)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>conv2d_3.0x3_tile</code></td>
+                            <td>~8,500.0</td>
+                            <td>8.5</td>
+                        </tr>
+                        <tr>
+                            <td><code>conv2d_3.0x3_s2_tile</code></td>
+                            <td>~9,200.0</td>
+                            <td>9.2</td>
+                        </tr>
+                        <tr>
+                            <td><code>conv2d_1.0x1_tile</code></td>
+                            <td>~1,200.0</td>
+                            <td>1.2</td>
+                        </tr>
+                        <tr>
+                            <td><code>elem_add_tile</code></td>
+                            <td>~150.0</td>
+                            <td>0.1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>The 3.0×3.0 convolution kernel dominates per-tile execution time due to the larger GEMM dimensions ($M=32.0, K=288.0, N=32.0$) compared to the 1.0×1.0 kernel ($M=32.0, K=32.0, N=32.0$). The strided 3.0×3.0 variant used in encoder downsampling stages incurs a modest overhead from the wider input tile required to produce stride-2.0 output. The element-wise addition kernel used for residual skip connections completes in under 200.0 cycles as it performs no matrix multiplication.</p>
+            <p>For layers with channel dimensions exceeding the 32.0-channel block size, the host invokes the kernel multiple times per spatial tile. A layer with $C_{in}$ input channels and $C_{out}$ output channels requires $(C_{in}/32.0) \times (C_{out}/32.0)$ kernel invocations per spatial tile, with partial sums accumulated across input channel blocks. Correctness was checked against the generated per-layer golden vectors, so the cycle numbers are tied to kernels that also matched the expected im2col, requantization, and LeakyReLU behavior.</p>
+
+            <h3>Shared-Memory IPC Results</h3>
+            <p>The shared-memory IPC path was validated on the full AWS KITTI sequence 00 replay. The RangeNet producer published all 4,541 scans through the <code>/rnsg_kitti_00</code> ring, and the SG-SLAM consumer processed 4,344 frames and wrote 4,344 odometry rows. The run reported 196 producer-side dropped frames and 197 consumer-side skipped frames, which were visible through the IPC drop counters and the consumer <code>skipped_before</code> field. This confirmed that the drop-oldest policy behaved as intended: the producer continued running without blocking, while the consumer received fresh complete frames and retained a dense <code>consumed_index</code> sequence for graph and pose indexing.</p>
+
+            <p>The IPC trace also showed why the shared-memory path mattered for latency accounting. The original file-style handoff cost about 20.0 ms per frame in the baseline pipeline; after replacing it with the shared-memory ring, the IPC cost became negligible in the accelerated path because the producer and consumer no longer write and reload per-frame label files. In the measured AWS run, the producer-side bottleneck remained RangeNet itself, with 161.3 ms average point loading and 70.1 ms average inference before publish, while SG-SLAM frontend processing averaged 70.5 ms. The IPC layer therefore did not hide the GPU inference bottleneck, but it removed the 20.0 ms transfer overhead and produced durable traces for dropped frames, publish timing, and consumer timing.</p>
+
+            <h3>Parallel Graph-Construction Results</h3>
+            <p>The multithreaded <code>BuildGraph()</code> implementation was evaluated with the dedicated microbenchmark in <code>eval/buildgraph</code>. The benchmark used 20 warmup frames, 150 timed frames, seed 570, and fixed graph parameters across both baseline and optimized runs. The optimization improved all tested graph sizes, with the gain increasing as the graph became denser.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nodes</th>
+                            <th>Baseline ms</th>
+                            <th>Optimized ms</th>
+                            <th>Speedup</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>64</td>
+                            <td>0.4858</td>
+                            <td>0.3510</td>
+                            <td>1.38×</td>
+                        </tr>
+                        <tr>
+                            <td>128</td>
+                            <td>2.7769</td>
+                            <td>2.0866</td>
+                            <td>1.33×</td>
+                        </tr>
+                        <tr>
+                            <td>256</td>
+                            <td>19.5040</td>
+                            <td>12.5655</td>
+                            <td>1.55×</td>
+                        </tr>
+                        <tr>
+                            <td>512</td>
+                            <td>147.0508</td>
+                            <td>93.9907</td>
+                            <td>1.56×</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>The largest tested graph dropped from 147.05 ms to 93.99 ms, improving graph-construction throughput from 6.80 FPS to 10.64 FPS. This result is important because it addresses the CPU-side bottleneck that appears after RangeNet inference is accelerated: semantic inference becomes much smaller, so graph construction and mapping become a larger fraction of the remaining frame time.</p>
+
+            <h3>Power Consumption</h3>
+            <p>Platform power for the GPU baseline was measured from the AWS <code>g5.xlarge</code> run. The accelerated-platform estimate was produced with AMD Power Design Manager (PDM) using the AIE-ML kernel design, ADF/PLIO graph structure, and projected Versal utilization. This keeps the reported power comparison tied to the actual accelerator architecture rather than assuming a generic FPGA fabric implementation.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Power (W)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>g5.xlarge baseline</td>
+                            <td>222.0</td>
+                        </tr>
+                        <tr>
+                            <td>Versal accelerated</td>
+                            <td>12.7</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>The Versal system draws 12.7 W, a 17.4× reduction from the 222.0 W baseline. At that power level, a 100.0 Wh battery would last about 7.9 hours, compared to about 0.5 hours at 222.0 W. The PDM result should be interpreted as a design estimate rather than a physical board measurement, but it is still useful for comparing the AIE-ML approach against the GPU baseline and against the rejected fabric-only systolic-array option.</p>
+
+            <h3>Energy Efficiency</h3>
+            <p>The combination of reduced latency and lower power consumption yields substantial energy efficiency gains. Table below presents the energy-per-frame comparison between the g5.xlarge baseline and the Versal accelerated run.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>g5.xlarge</th>
+                            <th>Versal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>End-to-end latency</td>
+                            <td>292.4 ms</td>
+                            <td>42.3 ms</td>
+                        </tr>
+                        <tr>
+                            <td>Power draw</td>
+                            <td>222.0 W</td>
+                            <td>12.7 W</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Energy per frame</strong></td>
+                            <td><strong>64.9 J</strong></td>
+                            <td><strong>0.5 J</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Efficiency gain</strong></td>
+                            <td>1.0×</td>
+                            <td><strong>120.6×</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>The Versal system reduces energy per frame from 64.9 J to 0.5 J, a 120.6× improvement. That gain comes from both the 6.9× reduction in end-to-end latency and the 17.4× reduction in power draw.</p>
+
+            <h3>Full-Network Latency</h3>
+            <p>The full RangeNet DarkNet53 network comprises 68.0 layers. At the KITTI input resolution of 64.0 × 2048.0, each layer is spatially tiled into 38.0 tiles of 8.0 × 32.0 pixels. Table below presents the measured end-to-end latency breakdown for the baseline and accelerated runs.</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Run</th>
+                            <th>RangeNet</th>
+                            <th>IPC</th>
+                            <th>SG-SLAM</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Baseline</td>
+                            <td>231.4 ms</td>
+                            <td>20.0 ms</td>
+                            <td>41.0 ms</td>
+                            <td>292.4 ms</td>
+                        </tr>
+                        <tr>
+                            <td>Accelerated</td>
+                            <td>16.0 ms</td>
+                            <td>0.0 ms</td>
+                            <td>26.3 ms</td>
+                            <td>42.3 ms</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>The accelerated run cuts the total pipeline latency from 292.4 ms to 42.3 ms, a 6.9× speedup and about 57.7 ms of headroom under the 100.0 ms frame budget. RangeNet inference drops from 231.4 ms to 16.0 ms, IPC from 20.0 ms to 0.0 ms, and SG-SLAM from 41.0 ms to 26.3 ms.</p>
+
+            <h3>SLAM Pipeline Impact</h3>
+            <p>Profiling of the full SGSlam pipeline on KITTI sequence 0.0 identified three primary processing stages: semantic inference (RangeNet), point cloud registration (ICP), and graph-based map optimization. The measured breakdown shows that the accelerated run lowers RangeNet from 231.4 ms to 16.0 ms, IPC from 20.0 ms to 0.0 ms, and SG-SLAM from 41.0 ms to 26.3 ms. The total latency falls from 292.4 ms to 42.3 ms, so the system meets the 100.0 ms real-time constraint with margin. The registration backend remained sequential and was not a good candidate for parallel speedup.</p>
+
+            <p>With the accelerator, semantic inference drops from the dominant bottleneck to a much smaller portion of the total runtime, shifting the system bottleneck toward the registration and mapping stages.</p>
+
+            <h2>Conclusion</h2>
+            <p>This work presented a hardware acceleration architecture for RangeNet DarkNet53 semantic segmentation targeting the AIE-ML tile array on AMD Versal AI Edge adaptive SoCs. The design implements four custom INT8 kernels—3.0×3.0 convolution, strided 3.0×3.0 convolution, 1.0×1.0 pointwise convolution, and residual element-wise addition—using the hardware-native matrix multiplication intrinsic with fused batch normalization, per-channel requantization, and LeakyReLU activation.</p>
+
+            <p>The measured architecture reduces RangeNet latency from 231.4 ms to 16.0 ms, and reduces full SG-SLAM latency from 292.4 ms to 42.3 ms. The Versal platform consumes 12.7 W compared to 222.0 W for the g5.xlarge baseline, yielding a 120.6× improvement in energy per frame. Even with the lower latency, the power level is still not a practical fit for drone deployment.</p>
+
+            <p>By offloading RangeNet inference to the AIE-ML array and using shared-memory IPC plus multithreaded graph construction, the SGSlam pipeline's per-frame latency drops well below the 100.0 ms real-time constraint. The attempted ICP registration offload was not effective because the loop is highly sequential and the correspondence math is not the main bottleneck. The complete pipeline—from pretrained FP32 model through batch normalization folding, per-channel INT8 quantization, weight transposition to GEMM-B layout, and AIE-ML kernel design—demonstrates a practical path for deploying deep neural network inference on adaptive SoC platforms for latency-sensitive autonomous navigation workloads.</p>
+
+            <p>Future work includes on-hardware validation of the simulation-based projections, calibrated per-channel activation scales for improved quantization accuracy, PLIO bandwidth optimization, and extending the acceleration to the ICP registration stage.</p>
+        </section>
+
+    </main>
+
+    <footer>
+        <h3>Nandan Kamath</h3>
+        <p>ASIC Design • Verification • Computer Architecture</p>
+    </footer>
+
+</body>
+</html>
